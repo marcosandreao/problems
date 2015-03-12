@@ -1,65 +1,108 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-
 public class Main {
+	
+	private static final int PRECO_POR_CARRO = 10;
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		int C = 0,N = 0,P,Q, price=0;
-		//int[] arrayVehicle = new int[3];
-		int[][] arrayVehicle; 
-		String e; //e=type of event
-		 /*C = Length in meters of Parking Lot
-		 * N= Number of events (Arrivals or Departures)
-		 * P = Vehicle Plate
-		 * Q = Vehicle Length*/
-		  
-		Scanner read = new Scanner(System.in);
-		System.out.printf("Enter [Length in Meters] and [Number of events] separated by a blank space, and HIT ENTER :\n");
-				
-		while ((C < 1) || (C>1000))  {
-			C = read.nextInt();
-			N = read.nextInt();	
-			
-		}
+
+		final List<Car> carrosEstacionados = new ArrayList<Main.Car>();
 		
-		//System.out.println(C + " "+ N);
-		arrayVehicle= new int[N][3];
-		for (int i=1;i<=N;i++){
-			
-				e= read.next(); //e=type of event
-				//P=read.nextInt(); //License Plate
-				//Q=read.nextInt(); // Car Length
-			
-				if (e.equals("C")){
-					P=read.nextInt(); //License Plate
-					Q=read.nextInt(); // Car Length
-					if (Q <= C){
-						C=C-Q;
-						
-						arrayVehicle[i-1][0] = i ; 
-						arrayVehicle[i-1][1] = P ;
-						arrayVehicle[i-1][2] = Q ;
-						price += 10; //a car arrives and total price is incremented
-						
-					}	
+		int espacoTotal = 0;
+		
+		int quantidadeDeEvento = 0;
+		
+		boolean configurarEstacionamento = true;
+		
+		final Scanner in = new Scanner(System.in);
+		
+		while (in.hasNext()) {
+			String line = in.nextLine();
+			if (configurarEstacionamento) {
+				final String values[] = line.split(" ");
+				espacoTotal = Integer.parseInt(values[0]);
+				quantidadeDeEvento = Integer.parseInt(values[1]);
+				configurarEstacionamento = false;
+			} else {
+				quantidadeDeEvento --;
+				final String values[] = line.split(" ");
+				final String operacao = values[0];
+				final String placa = values[1];
+				boolean entrada = operacao.equalsIgnoreCase("C");
+				
+				int metro = entrada? Integer.parseInt(values[2]) : 0;
+
+				final Car car = new Car(placa, metro);
+				
+				if ( entrada ) {
+					if ( podeEntrar(espacoTotal, carrosEstacionados, car) ){
+						carrosEstacionados.add(car);
+					} 
+				} else {
+					carrosEstacionados.remove(car);
 				}
-				if (e.equals("S")){ 
-					P=read.nextInt(); //License Plate
-					for (int x = 1; x < arrayVehicle.length; x++) {
-						
-							if (arrayVehicle[x][1] == P){
-								C= C+ arrayVehicle[x][2];
-							}
-							
-					}
-					
 				
-				}	
+				if ( quantidadeDeEvento == 0 ) {
+					configurarEstacionamento = true;
+					System.out.println(carrosEstacionados.size() * PRECO_POR_CARRO);
+					carrosEstacionados.clear();
+				}
 			}
-		System.out.println("Total price is R$ "+price);
 		}
-		
-		
-	
+		in.close();
+	}
+
+	private static boolean podeEntrar(int espacoTotal, final List<Car> carrosEstacionados,
+			final Car car) {
+		if ( !carrosEstacionados.contains(car) ) {
+			int totalVagasOcupadas = 0;
+			for ( Car carroEstacionado : carrosEstacionados ) {
+				totalVagasOcupadas += carroEstacionado.comprimento;
+			}
+			if ( ( totalVagasOcupadas + car.comprimento ) <= espacoTotal ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static class Car {
+
+		private String placa;
+		private int comprimento;
+
+		public Car(String placa, int comprimento) {
+			this.placa = placa;
+			this.comprimento = comprimento;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((placa == null) ? 0 : placa.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Car other = (Car) obj;
+			if (placa == null) {
+				if (other.placa != null)
+					return false;
+			} else if (!placa.equals(other.placa))
+				return false;
+			return true;
+		}
+
+	}
+
 }
